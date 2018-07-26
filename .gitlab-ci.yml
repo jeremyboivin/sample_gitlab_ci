@@ -4,6 +4,7 @@ variables:
 
 stages:
   - syntax
+  - test
 
 shell_syntax:
   tags:
@@ -24,4 +25,17 @@ python_syntax:
     - pip install pip setuptools wheel --upgrade
     - pip install -r requirements.txt --upgrade
     - pylint my_project
+
+test:
+  tags:
+    - Linux
+  image: ${IMG}
+  stage: test
+  variables:
+    MY_SERVER_URL: "MY_URL"
+  script:
+    - pip install pip setuptools wheel --upgrade
+    - pip install -r requirements.txt --upgrade
+    - python3 setup.py develop
+    - pytest -v --cov=my_project --ignore=tests/functional --cov-report term-missing
 
