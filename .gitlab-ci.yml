@@ -1,0 +1,27 @@
+# To define global variables
+variables:
+  IMG: "MY_BUILT_IMG"
+
+stages:
+  - syntax
+
+shell_syntax:
+  tags:
+    - Linux
+  image: ${IMG}
+  stage: syntax
+  script:
+    - apt install shellcheck -y
+    # Shellcheck is an example to check SHELL scripts syntax
+    - shellcheck *.sh scripts/*.sh
+
+python_syntax:
+  tags:
+    - Linux
+  image: ${IMG}
+  stage: syntax
+  script:
+    - pip install pip setuptools wheel --upgrade
+    - pip install -r requirements.txt --upgrade
+    - pylint my_project
+
