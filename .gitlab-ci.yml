@@ -1,11 +1,14 @@
 # To define global variables
 variables:
   IMG: "MY_BUILT_IMG"
+  PROD_LINUX_SERVER: "MY_PRODUCTION_LINUX_SERVER_URL"
+  PROD_WINDOWS_SERVER: "MY_PRODUCTION_WINDOWS_SERVER_URL"
 
 stages:
   - syntax
   - test
   - build
+  - deploy
 
 shell_syntax:
   tags:
@@ -74,3 +77,32 @@ windows_build:
     when: on_success
   only:
     - tags
+
+linux_deploy:
+  tags:
+    - Linux
+  image: ${IMG}
+  stage: deploy
+  script:
+    - cd debuild
+    - dput ${PROD_LINUX_SERVER} my_project_VERSION_amd64.changes 
+  only:
+    - tags
+  dependencies:
+    - build_linux
+  when: manual
+
+windows_deploy:
+  tags:
+    - Linux
+  image: ${IMG}
+  stage: deploy
+  script:
+    - DEST_DIR=$(if [[ "${CI_COMMIT_TAG}" =~ "beta" ]]; then echo "testing"; else echo "stable"; fi)
+    - echo "${PROD_WINDOWS_SERVER}" > /password-repo.key
+    - echo "put build/exe.win32/*.msi /" | sshpass -f /password-repo.key sftp -oBatchMode=no -oStrictHostKeyChecking=no -b - USERNAME@${PROD_WINDOWS_SERVER}
+  only:
+    - tags
+  dependencies:
+    - build_windows
+  when: manual
