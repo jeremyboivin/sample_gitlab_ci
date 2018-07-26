@@ -5,6 +5,7 @@ variables:
 stages:
   - syntax
   - test
+  - build
 
 shell_syntax:
   tags:
@@ -39,3 +40,37 @@ test:
     - python3 setup.py develop
     - pytest -v --cov=my_project --ignore=tests/functional --cov-report term-missing
 
+linux_build:
+  tags:
+    - Linux
+  image: ${IMG}
+  stage: build
+  variables:
+    MY_SERVER_URL: "MY_URL"
+  script:
+    - pip install pip setuptools wheel --upgrade
+    - build_debian_image.sh
+  artifacts:
+    expire_in: 1 week
+    paths:
+      - ./debuild
+    when: on_success
+  only:
+    - tags
+
+windows_build:
+  stage: build
+  tags:
+    - Windows
+  variables:
+    MY_SERVER_URL: "MY_URL"
+  script:
+    - python -m pip install pip wheel --upgrade
+    - build_windows_image.bat
+  artifacts:
+    expire_in: 1 week
+    paths:
+      - build\exe.win32\my_project.msi
+    when: on_success
+  only:
+    - tags
